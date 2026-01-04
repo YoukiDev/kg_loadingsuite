@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>KG LoadingSuite</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Background slideshow -->
+  <div class="bg">
+    <div class="bg-layer" id="bgA"></div>
+    <div class="bg-layer" id="bgB"></div>
+    <div class="bg-vignette"></div>
+  </div>
+
+  <!-- Top-left text -->
+  <div class="top-left">
+    <div class="small-title" id="topServer">Server</div>
+    <div class="small-sub" id="topSubtitle">Connexion...</div>
+  </div>
+
+  <!-- Center Avatar -->
+  <div class="center">
+    <div class="avatar-wrap">
+      <img id="avatar" class="avatar" alt="avatar" />
+      <div id="avatarFallback" class="avatar-fallback">?</div>
+      <div class="avatar-glow"></div>
+    </div>
+  </div>
+
+  <!-- Bottom HUD -->
+  <div class="hud">
+    <div class="hud-item">
+      <div class="hud-icon">🗺️</div>
+      <div class="hud-text">
+        <div class="hud-title" id="map">—</div>
+        <div class="hud-sub">MAP</div>
+      </div>
+    </div>
+
+    <div class="slash"></div>
+
+    <div class="hud-item">
+      <div class="hud-icon">🎮</div>
+      <div class="hud-text">
+        <div class="hud-title" id="gm">—</div>
+        <div class="hud-sub">GAMEMODE</div>
+      </div>
+    </div>
+
+    <div class="slash"></div>
+
+    <div class="hud-item">
+      <div class="hud-icon">👥</div>
+      <div class="hud-text">
+        <div class="hud-title"><span id="players">—</span>/<span id="maxplayers">—</span></div>
+        <div class="hud-sub">PLAYERS</div>
+      </div>
+    </div>
+
+    <div class="slash"></div>
+
+    <div class="hud-item hud-right">
+      <div class="hud-text right">
+        <div class="hud-title" id="percent">0%</div>
+        <div class="hud-sub" id="status">Connexion au serveur…</div>
+      </div>
+
+      <div class="progress">
+        <div class="bar" id="bar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
