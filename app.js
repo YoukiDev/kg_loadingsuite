@@ -1,41 +1,33 @@
 // =========================================================
-// KG LoadingSuite - app.js
-// Fix GitHub Pages paths + slideshow + GMod hooks + centered avatar
+// KG LoadingSuite - app.js (VERSION STABLE GITHUB PAGES)
 // =========================================================
 
-// Base URL dynamique (marche sur GitHub Pages + local + asset://)
-const BASE_URL = new URL("./", window.location.href).href;
+// ⚠️ METS TON URL EXACTE ICI
+const SITE_URL = "https://youkidev.github.io/kg_loadingsuite/";
 
-// Mets autant d'images que tu veux ici (dans /assets/)
+// BACKGROUNDS (CHEMIN ABSOLU = PLUS JAMAIS D'ÉCRAN NOIR)
 const BACKGROUNDS = [
-  BASE_URL + "assets/bg1.jpg",
-  BASE_URL + "assets/bg2.jpg",
-  BASE_URL + "assets/bg3.jpg",
-  BASE_URL + "assets/bg4.jpg",
-  BASE_URL + "assets/bg5.jpg",
+  SITE_URL + "assets/bg1.jpg",
+  SITE_URL + "assets/bg2.jpg",
+  SITE_URL + "assets/bg3.jpg",
+  SITE_URL + "assets/bg4.jpg",
+  SITE_URL + "assets/bg5.jpg",
 ];
 
-// ---------------------------------------------------------
 // AVATAR
-// IMPORTANT: Pour un avatar Steam "réel", il faut un endpoint API
-// (Steam bloque l'accès direct depuis une page statique à cause du CORS).
-//
-// - "local": affiche le "?" (fallback) mais bien centré
-// - "api"  : récupère l'avatar via ton endpoint: https://tonsite.com/avatar?steamid=...
-// ---------------------------------------------------------
-const AVATAR_MODE = "local"; // <-- mets "api" quand tu auras l'endpoint
-const AVATAR_API = "https://tonsite.com/steam_avatar.php?steamid="; // à changer si mode "api"
+const AVATAR_MODE = "local"; // "api" plus tard
+const AVATAR_API = "https://tonsite.com/avatar.php?steamid=";
 
 const el = (id) => document.getElementById(id);
 
-// ---------- Background slideshow ----------
+// ---------------- BACKGROUND ----------------
 let bgIndex = 0;
 let useA = true;
 
-function preloadImages(list) {
-  list.forEach((src) => {
-    const img = new Image();
-    img.src = src;
+function preload() {
+  BACKGROUNDS.forEach(src => {
+    const i = new Image();
+    i.src = src;
   });
 }
 
@@ -55,9 +47,7 @@ function setBg(url) {
 }
 
 function startSlideshow() {
-  if (!BACKGROUNDS.length) return;
-
-  preloadImages(BACKGROUNDS);
+  preload();
   setBg(BACKGROUNDS[0]);
 
   setInterval(() => {
@@ -66,89 +56,37 @@ function startSlideshow() {
   }, 7000);
 }
 
-// ---------- Progress ----------
+// ---------------- PROGRESS ----------------
 function setProgress(p) {
   p = Math.max(0, Math.min(100, p));
-
-  const bar = el("bar");
-  const percent = el("percent");
-
-  if (bar) bar.style.width = `${p}%`;
-  if (percent) percent.textContent = `${Math.floor(p)}%`;
+  el("bar").style.width = p + "%";
+  el("percent").textContent = Math.floor(p) + "%";
 }
 
-// ---------- Avatar ----------
-function showFallbackAvatar() {
-  const img = el("avatar");
-  const fallback = el("avatarFallback");
-  if (img) img.style.display = "none";
-  if (fallback) fallback.style.display = "flex";
+// ---------------- AVATAR ----------------
+function setAvatar() {
+  el("avatar").style.display = "none";
+  el("avatarFallback").style.display = "flex";
 }
 
-function showImageAvatar(url) {
-  const img = el("avatar");
-  const fallback = el("avatarFallback");
-  if (!img || !fallback) return;
-
-  img.onload = () => {
-    fallback.style.display = "none";
-    img.style.display = "block";
-  };
-
-  img.onerror = () => {
-    showFallbackAvatar();
-  };
-
-  img.src = url;
-}
-
-function setAvatarFromSteamId(steamid) {
-  // Toujours centré grâce au CSS. Ici on gère juste l'image.
-  if (!steamid) return;
-
-  if (AVATAR_MODE !== "api") {
-    showFallbackAvatar();
-    return;
-  }
-
-  const url = AVATAR_API + encodeURIComponent(steamid);
-  showImageAvatar(url);
-}
-
-// ---------- GMod hooks ----------
-window.GameDetails = function (servername, serverurl, mapname, maxplayers, steamid, gamemode) {
-  const map = el("map");
-  const gm = el("gm");
-  const maxp = el("maxplayers");
-  const topServer = el("topServer");
-  const topSubtitle = el("topSubtitle");
-
-  if (map) map.textContent = mapname || "—";
-  if (gm) gm.textContent = gamemode || "—";
-  if (maxp) maxp.textContent = maxplayers || "—";
-
-  // top-left style (comme ton screen)
-  if (topServer) topServer.textContent = "Server";
-  if (topSubtitle) topSubtitle.textContent = `you are now playing ${servername || ""}`;
-
-  // avatar (au centre visuellement via CSS)
-  setAvatarFromSteamId(steamid);
+// ---------------- GMOD HOOKS ----------------
+window.GameDetails = function(servername, serverurl, mapname, maxplayers, steamid, gamemode) {
+  el("map").textContent = mapname || "—";
+  el("gm").textContent = gamemode || "—";
+  el("maxplayers").textContent = maxplayers || "—";
+  el("topServer").textContent = "Server";
+  el("topSubtitle").textContent = "you are now playing " + (servername || "");
+  setAvatar();
 };
 
-window.SetStatusChanged = function (status) {
-  const s = el("status");
-  if (s) s.textContent = status || "Chargement...";
+window.SetStatusChanged = function(status) {
+  el("status").textContent = status || "Chargement...";
 };
 
-window.DownloadProgress = function (percent) {
+window.DownloadProgress = function(percent) {
   setProgress(percent || 0);
 };
 
-// Joueurs actuels non fournis par défaut => —
-const players = el("players");
-if (players) players.textContent = "—";
-
-// ---------- Init ----------
+// ---------------- INIT ----------------
 startSlideshow();
 setProgress(0);
-showFallbackAvatar();
