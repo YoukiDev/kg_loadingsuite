@@ -1,27 +1,30 @@
 // =========================================================
 // KG LoadingSuite - app.js
-// Background slideshow + GMod hooks + center avatar
+// Fix GitHub Pages paths + slideshow + GMod hooks + centered avatar
 // =========================================================
 
-// Mets autant d'images que tu veux ici (dans assets/)
-const BASE_PATH = window.location.pathname.includes("kg_loadingsuite")
-  ? "/kg_loadingsuite/"
-  : "/";
+// Base URL dynamique (marche sur GitHub Pages + local + asset://)
+const BASE_URL = new URL("./", window.location.href).href;
 
+// Mets autant d'images que tu veux ici (dans /assets/)
 const BACKGROUNDS = [
-  BASE_PATH + "assets/bg1.jpg",
-  BASE_PATH + "assets/bg2.jpg",
-  BASE_PATH + "assets/bg3.jpg",
-  BASE_PATH + "assets/bg4.jpg",
-  BASE_PATH + "assets/bg5.jpg",
+  BASE_URL + "assets/bg1.jpg",
+  BASE_URL + "assets/bg2.jpg",
+  BASE_URL + "assets/bg3.jpg",
+  BASE_URL + "assets/bg4.jpg",
+  BASE_URL + "assets/bg5.jpg",
 ];
 
-
-// AVATAR:
-// En local, on ne peut pas récupérer facilement l'avatar Steam (CORS/API).
-// Donc: placeholder (?), mais le système est prêt si tu veux une version API.
-const AVATAR_MODE = "local"; // "local" ou "api"
-const AVATAR_API  = "https://tonsite.com/steam_avatar.php?steamid=";
+// ---------------------------------------------------------
+// AVATAR
+// IMPORTANT: Pour un avatar Steam "réel", il faut un endpoint API
+// (Steam bloque l'accès direct depuis une page statique à cause du CORS).
+//
+// - "local": affiche le "?" (fallback) mais bien centré
+// - "api"  : récupère l'avatar via ton endpoint: https://tonsite.com/avatar?steamid=...
+// ---------------------------------------------------------
+const AVATAR_MODE = "local"; // <-- mets "api" quand tu auras l'endpoint
+const AVATAR_API = "https://tonsite.com/steam_avatar.php?steamid="; // à changer si mode "api"
 
 const el = (id) => document.getElementById(id);
 
@@ -29,17 +32,22 @@ const el = (id) => document.getElementById(id);
 let bgIndex = 0;
 let useA = true;
 
+function preloadImages(list) {
+  list.forEach((src) => {
+    const img = new Image();
+    img.src = src;
+  });
+}
+
 function setBg(url) {
   const A = el("bgA");
   const B = el("bgB");
+  if (!A || !B) return;
 
   const show = useA ? A : B;
   const hide = useA ? B : A;
 
-  // Set image on the layer that will appear
   show.style.backgroundImage = `url("${url}")`;
-
-  // Crossfade
   show.style.opacity = "1";
   hide.style.opacity = "0";
 
@@ -49,16 +57,9 @@ function setBg(url) {
 function startSlideshow() {
   if (!BACKGROUNDS.length) return;
 
-  // Preload (évite un flash noir au premier switch)
-  BACKGROUNDS.forEach((src) => {
-    const img = new Image();
-    img.src = src;
-  });
-
-  // Start with first bg
+  preloadImages(BACKGROUNDS);
   setBg(BACKGROUNDS[0]);
 
-  // Change every 7s
   setInterval(() => {
     bgIndex = (bgIndex + 1) % BACKGROUNDS.length;
     setBg(BACKGROUNDS[bgIndex]);
@@ -68,6 +69,7 @@ function startSlideshow() {
 // ---------- Progress ----------
 function setProgress(p) {
   p = Math.max(0, Math.min(100, p));
+
   const bar = el("bar");
   const percent = el("percent");
 
@@ -76,21 +78,17 @@ function setProgress(p) {
 }
 
 // ---------- Avatar ----------
-function setAvatarFromSteamId(steamid) {
+function showFallbackAvatar() {
   const img = el("avatar");
   const fallback = el("avatarFallback");
+  if (img) img.style.display = "none";
+  if (fallback) fallback.style.display = "flex";
+}
 
+function showImageAvatar(url) {
+  const img = el("avatar");
+  const fallback = el("avatarFallback");
   if (!img || !fallback) return;
-
-  // Mode local: affiche "?"
-  if (AVATAR_MODE !== "api") {
-    img.style.display = "none";
-    fallback.style.display = "flex";
-    return;
-  }
-
-  // Mode API: récupère l'image via endpoint
-  const url = AVATAR_API + encodeURIComponent(steamid);
 
   img.onload = () => {
     fallback.style.display = "none";
@@ -98,11 +96,23 @@ function setAvatarFromSteamId(steamid) {
   };
 
   img.onerror = () => {
-    img.style.display = "none";
-    fallback.style.display = "flex";
+    showFallbackAvatar();
   };
 
   img.src = url;
+}
+
+function setAvatarFromSteamId(steamid) {
+  // Toujours centré grâce au CSS. Ici on gère juste l'image.
+  if (!steamid) return;
+
+  if (AVATAR_MODE !== "api") {
+    showFallbackAvatar();
+    return;
+  }
+
+  const url = AVATAR_API + encodeURIComponent(steamid);
+  showImageAvatar(url);
 }
 
 // ---------- GMod hooks ----------
@@ -117,12 +127,12 @@ window.GameDetails = function (servername, serverurl, mapname, maxplayers, steam
   if (gm) gm.textContent = gamemode || "—";
   if (maxp) maxp.textContent = maxplayers || "—";
 
-  // top-left infos (comme sur ton screen)
+  // top-left style (comme ton screen)
   if (topServer) topServer.textContent = "Server";
   if (topSubtitle) topSubtitle.textContent = `you are now playing ${servername || ""}`;
 
-  // avatar center
-  if (steamid) setAvatarFromSteamId(steamid);
+  // avatar (au centre visuellement via CSS)
+  setAvatarFromSteamId(steamid);
 };
 
 window.SetStatusChanged = function (status) {
@@ -134,12 +144,11 @@ window.DownloadProgress = function (percent) {
   setProgress(percent || 0);
 };
 
-// Les joueurs actuels ne sont pas fournis par défaut dans les hooks GMod,
-// donc on laisse "—"
+// Joueurs actuels non fournis par défaut => —
 const players = el("players");
 if (players) players.textContent = "—";
 
 // ---------- Init ----------
 startSlideshow();
 setProgress(0);
-
+showFallbackAvatar();
