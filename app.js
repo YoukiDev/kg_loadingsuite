@@ -4,13 +4,18 @@
 // =========================================================
 
 // Mets autant d'images que tu veux ici (dans assets/)
+const BASE_PATH = window.location.pathname.includes("kg_loadingsuite")
+  ? "/kg_loadingsuite/"
+  : "/";
+
 const BACKGROUNDS = [
-  "assets/bg1.jpg",
-  "assets/bg2.jpg",
-  "assets/bg3.jpg",
-  "assets/bg4.jpg",
-  "assets/bg5.jpg",
+  BASE_PATH + "assets/bg1.jpg",
+  BASE_PATH + "assets/bg2.jpg",
+  BASE_PATH + "assets/bg3.jpg",
+  BASE_PATH + "assets/bg4.jpg",
+  BASE_PATH + "assets/bg5.jpg",
 ];
+
 
 // AVATAR:
 // En local, on ne peut pas récupérer facilement l'avatar Steam (CORS/API).
@@ -137,3 +142,4 @@ if (players) players.textContent = "—";
 // ---------- Init ----------
 startSlideshow();
 setProgress(0);
+
